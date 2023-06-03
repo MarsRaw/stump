@@ -113,7 +113,7 @@ macro_rules! vprintln {
     () => (if $crate::print::is_verbose() { std::print!("\n"); });
     ($($arg:tt)*) => {
         if $crate::is_verbose() {
-            $crate::print::do_println(&format!("{} {}:{} {}", $crate::format_datetime(), file!(), line!(), format!($($arg)*)));
+            $crate::do_println(&format!("{} {}:{} {}", $crate::format_datetime(), file!(), line!(), format!($($arg)*)));
         }
     };
 }
@@ -123,7 +123,7 @@ macro_rules! vprintln {
 macro_rules! veprintln {
     () => (if $crate::is_verbose() { std::eprint!("\n"); });
     ($($arg:tt)*) => {
-        if $crate::print::is_verbose() {
+        if $crate::is_verbose() {
             eprintln!("{} {}:{} {}", $crate::format_datetime(), file!(), line!(), format!($($arg)*));
         }
     };

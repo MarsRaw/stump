@@ -2,7 +2,6 @@ use anyhow::{anyhow, Result};
 use chrono::prelude::*;
 use colored::*;
 use std::env;
-use termsize;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub enum LogEntryLevel {

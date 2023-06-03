@@ -1,0 +1,14 @@
+[package]
+name = "stump"
+version = "0.1.0"
+edition = "2021"
+description = "A rather simple and very limited logger"
+
+[lib]
+name = "stump"
+
+[dependencies]
+chrono = "0.4.19"
+colored = "2.0.0"
+termsize = "0.1.6"
+anyhow = "1.0.65"

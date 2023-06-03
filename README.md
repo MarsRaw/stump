@@ -32,6 +32,28 @@ stump::print_fail("Some process failed");
 // Some process failed                                      [ FAIL ]
 ```
 
+## General Purpose Verbose (or not) Printing 
+For a general purpose version of Rust's `println` and `eprintln` that respects a global verbosity setting.
+
+```rust
+
+vprintln!("This won't print as the default is false");
+
+stump::set_verbose(true);
+
+// print to stdout
+vprintln!("Print something {}", "Here");
+
+
+// print to stderr
+veprintln!("Print something {}", "Here");
+
+stump::set_verbose(false);
+
+// Don't print to stdout
+vprintln("Again nothing will print");
+```
+
 ## Overriding Stdout
 When integrating stump with another CLI library, such as `indicatif`, you can provide another means of printing, such as to
 route the output through their print method:

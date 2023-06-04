@@ -1,6 +1,22 @@
 # Stump
 Stump is a *very* simple console logging library.
 
+## Application-set Logging Level
+The application can use Stump's `set_min_log_level` function call to set the globally used log level. This, however, can be user-overridden using environment variables.
+
+```rust
+#[macro_use]
+extern crate stump;
+
+fn main() {
+    stump::set_min_log_level(stump::LogEntryLevel::INFO);
+    info!("Initialized logging");
+
+    // Application logic ...
+}
+
+```
+
 ## Environment variable control:
 ```bash
 STUMP_LOG_AT_LEVEL = DEBUG | INFO | WARN | ERROR

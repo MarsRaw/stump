@@ -5,13 +5,12 @@ use std::env;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub enum LogEntryLevel {
-    DEBUG = 0x0,
-    INFO = 0x1,
-    WARN = 0x2,
-    ERROR = 0x3,
+    ERROR = 0x0,
+    WARN = 0x1,
+    INFO = 0x2,
+    DEBUG = 0x3,
 }
 
-const DEFAULT_LOG_AT_LEVEL: LogEntryLevel = LogEntryLevel::INFO;
 const DEFAULT_DATETIME_PRINT_FORMAT: &str = "%Y-%m-%d %H:%M:%S%.3f";
 
 impl LogEntryLevel {
@@ -39,12 +38,13 @@ impl LogEntryLevel {
         if let Ok(e) = env::var(env_var_name) {
             LogEntryLevel::from_string(&e)
         } else {
-            Ok(DEFAULT_LOG_AT_LEVEL)
+            Ok(unsafe { MIN_LOG_LEVEL })
         }
     }
 }
 
 static mut IS_VERBOSE: bool = false;
+static mut MIN_LOG_LEVEL: LogEntryLevel = LogEntryLevel::WARN;
 
 type FnPrint = dyn Fn(&String) + Send + Sync + 'static;
 static mut PRINT: Option<Box<FnPrint>> = None;
@@ -78,6 +78,18 @@ pub fn set_verbose(v: bool) {
 /// Indicates whether the verbose flag is set
 pub fn is_verbose() -> bool {
     unsafe { IS_VERBOSE }
+}
+
+/// Sets the global minimum logging level. Can be user-overridden with `STUMPLOG_AT_LEVEL`
+pub fn set_min_log_level(min_log_level: LogEntryLevel) {
+    unsafe {
+        MIN_LOG_LEVEL = min_log_level;
+    }
+}
+
+/// Retrieves the global minimum logging level. Does not check the user env var.
+pub fn get_min_log_level() -> LogEntryLevel {
+    unsafe { MIN_LOG_LEVEL }
 }
 
 /// Returns a data time format string that should be used for logging. Will be either the default

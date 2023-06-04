@@ -144,7 +144,7 @@ macro_rules! veprintln {
 #[macro_export]
 macro_rules! status {
     ($level:expr, $($arg:tt)*) => {
-        println!("{} {:?} {}:{} {}", $crate::format_datetime(), $level, file!(), line!(), format!($($arg)*));
+        println!("{}{:?} {}:{} {}", $crate::format_datetime(), $level, file!(), line!(), format!($($arg)*));
     };
 }
 

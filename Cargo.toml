@@ -1,8 +1,12 @@
 [package]
 name = "stump"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-description = "A rather simple and very limited logger"
+authors = ["Kevin M. Gill <apoapsys@gmail.com>"]
+description = "Simplified command line logging"
+repository = "https://github.com/kmgill/stump"
+readme = "README.md"
+license = "MIT" 
 
 [lib]
 name = "stump"

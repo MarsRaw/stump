@@ -315,7 +315,7 @@ pub fn print_complete(file_base_name: &String, status: CompleteStatus) {
 }
 
 /// Formats the completion message
-fn format_complete(file_base_name: &str, status: CompleteStatus) -> String {
+pub fn format_complete(file_base_name: &str, status: CompleteStatus) -> String {
     let mut width = 88;
 
     if let Some(size) = termsize::get() {

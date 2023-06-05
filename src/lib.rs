@@ -3,6 +3,7 @@ use chrono::prelude::*;
 use colored::*;
 use std::env;
 
+/// Defines the four main logging output levels
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub enum LogEntryLevel {
     ERROR = 0x0,
@@ -43,14 +44,37 @@ impl LogEntryLevel {
     }
 }
 
+/// Global indicator for verbose output when printing via `vprintln` and/or `veprintln`. Not meant to be set directly,
+/// instead via `set_verbose`
 static mut IS_VERBOSE: bool = false;
+
+/// Program-controlled minimum log level. Controls the printing of messages via `debug!()`, `info!()`, `warn!()`, and `error!()`
 static mut MIN_LOG_LEVEL: LogEntryLevel = LogEntryLevel::WARN;
 
+/// Type definition for optional callbacks to capture log output.
 type FnPrint = dyn Fn(&String) + Send + Sync + 'static;
+
+/// Global storage point for optional output callback.
 static mut PRINT: Option<Box<FnPrint>> = None;
 
 /// Provides an alternative print method for integration with other command line
 /// options such as `informif`.
+///
+/// # Example
+/// ```
+/// use indicatif::ProgressBar;
+/// use stump;
+///
+/// lazy_static! {
+///     static ref PB: ProgressBar = ProgressBar::new(1);
+/// }
+///
+/// fn main() {
+///     stump::set_print(|s| {
+///         PB.println(s);
+///     });
+/// }
+/// ```
 pub fn set_print<F: Fn(&String) + Send + Sync + 'static>(f: F) {
     unsafe {
         PRINT = Some(Box::new(f));
@@ -69,6 +93,24 @@ pub fn do_println(s: &String) {
 }
 
 /// Sets whether the verbose standard print macro prints to stdout or stays silent
+///
+/// # Example
+/// ```
+/// vprintln!("This won't print as the default is false");
+///
+/// stump::set_verbose(true);
+///
+/// // print to stdout
+/// vprintln!("Print something {}", "Here");
+///
+/// // print to stderr
+/// veprintln!("Print something {}", "Here");
+///
+/// stump::set_verbose(false);
+///
+/// // Don't print to stdout
+/// vprintln("Again nothing will print");
+/// ```
 pub fn set_verbose(v: bool) {
     unsafe {
         IS_VERBOSE = v;
@@ -141,6 +183,7 @@ macro_rules! veprintln {
     };
 }
 
+/// Generic status print, expects a LogEntryLevel as the first parameter.
 #[macro_export]
 macro_rules! status {
     ($level:expr, $($arg:tt)*) => {
@@ -148,6 +191,7 @@ macro_rules! status {
     };
 }
 
+/// Prints a status message if the minimum status level is at or above the supplied LogEntryLevel enum (first parameter)
 #[macro_export]
 macro_rules! status_at_or_above {
     ($level:expr, $($arg:tt)*) => {
@@ -159,6 +203,7 @@ macro_rules! status_at_or_above {
     };
 }
 
+/// Prints messages at the DEBUG (lowest) level. Accepts standard `println` formatting.
 #[macro_export]
 macro_rules! debug {
     ($($arg:tt)*) => {
@@ -166,6 +211,7 @@ macro_rules! debug {
     };
 }
 
+/// Prints messages at the INFO level. Accepts standard `println` formatting.
 #[macro_export]
 macro_rules! info {
     ($($arg:tt)*) => {
@@ -173,6 +219,7 @@ macro_rules! info {
     };
 }
 
+/// Prints messages at the WARN level. Accepts standard `println` formatting.
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {
@@ -180,6 +227,7 @@ macro_rules! warn {
     };
 }
 
+/// Prints messages at the ERROR level. Accepts standard `println` formatting.
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => {
@@ -195,35 +243,79 @@ pub enum CompleteStatus {
     FAIL,
 }
 
-pub fn print_done(file_base_name: &String) {
+/// Prints a message and an OK similar to older Linux boot displays
+///
+/// # Example:
+/// ```
+/// print_done("Completed task #1");
+/// // Completed task #1                                                               [ DONE ]
+/// ```
+pub fn print_done(file_base_name: &str) {
     do_println(&format_complete(file_base_name, CompleteStatus::OK));
 }
 
-pub fn format_done(file_base_name: &String) -> String {
+/// Formats a message and an OK similar to older Linux boot displays
+///
+/// # Example:
+/// ```
+/// let m = stump::format_done("Completed task #1");
+/// assert_eq!(m, "Completed task #1                                                               [ DONE ]");
+/// ```
+pub fn format_done(file_base_name: &str) -> String {
     format_complete(file_base_name, CompleteStatus::OK)
 }
 
-pub fn print_warn(file_base_name: &String) {
+/// Prints a message and a WARN similar to older Linux boot displays
+///
+/// # Example:
+/// ```
+/// format_done("Completed task #1 with warnings");
+/// // Completed task #1 with warnings   [ WARN ]
+/// ```
+pub fn print_warn(file_base_name: &str) {
     do_println(&format_complete(file_base_name, CompleteStatus::WARN));
 }
 
-pub fn format_warn(file_base_name: &String) -> String {
+/// Formats a message and a WARN similar to older Linux boot displays
+///
+/// # Example:
+/// ```
+/// let m = stump::format_warn("Completed task #1 with warnings");
+/// assert_eq!(m, "Completed task #1 with warnings                                                 [ WARN ]");
+/// ```
+pub fn format_warn(file_base_name: &str) -> String {
     format_complete(file_base_name, CompleteStatus::WARN)
 }
 
-pub fn print_fail(file_base_name: &String) {
+/// Prints a message and a FAIL similar to older Linux boot displays
+///
+/// # Example:
+/// ```
+/// print_done("Completed task #1 with errors");
+/// // Completed task #1 with errors                                                 [ DONE ]
+/// ```
+pub fn print_fail(file_base_name: &str) {
     do_println(&format_complete(file_base_name, CompleteStatus::FAIL));
 }
 
-pub fn format_fail(file_base_name: &String) -> String {
+/// Formats a message and a FAIL similar to older Linux boot displays
+///
+/// # Example:
+/// ```
+/// let m = stump::format_fail("Completed task #1 with errors");
+/// assert_eq!(m, "Completed task #1 with errors                                                   [ FAIL ]");
+/// ```
+pub fn format_fail(file_base_name: &str) -> String {
     format_complete(file_base_name, CompleteStatus::FAIL)
 }
 
+/// Directly prints a completion message, taking in the CompleteStatus enum
 pub fn print_complete(file_base_name: &String, status: CompleteStatus) {
     do_println(&format_complete(file_base_name, status));
 }
 
-pub fn format_complete(file_base_name: &String, status: CompleteStatus) -> String {
+/// Formats the completion message
+fn format_complete(file_base_name: &str, status: CompleteStatus) -> String {
     let mut width = 88;
 
     if let Some(size) = termsize::get() {
@@ -248,6 +340,13 @@ pub fn format_complete(file_base_name: &String, status: CompleteStatus) -> Strin
     )
 }
 
+/// Prints a simple message indicating experimental status of a function.
+///
+/// # Example
+/// ```
+/// print_experimental()
+/// // Experimental Code! - Results may vary, bugs will be present, and not all functionality has been implemented
+/// ```
 pub fn print_experimental() {
     do_println(&format!("{} - Results may vary, bugs will be present, and not all functionality has been implemented", "Experimental Code!".red()));
 }

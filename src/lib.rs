@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use chrono::prelude::*;
 use colored::*;
 use std::env;
+use std::sync::{Arc, Mutex};
 
 /// Defines the four main logging output levels
 #[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Ord)]
@@ -55,7 +56,7 @@ static mut MIN_LOG_LEVEL: LogEntryLevel = LogEntryLevel::WARN;
 type FnPrint = dyn Fn(&String) + Send + Sync + 'static;
 
 /// Global storage point for optional output callback.
-static mut PRINT: Option<Box<FnPrint>> = None;
+static PRINT: Mutex<Option<Arc<FnPrint>>> = Mutex::new(None);
 
 /// Provides an alternative print method for integration with other command line
 /// options such as `informif`.
@@ -76,19 +77,16 @@ static mut PRINT: Option<Box<FnPrint>> = None;
 /// }
 /// ```
 pub fn set_print<F: Fn(&String) + Send + Sync + 'static>(f: F) {
-    unsafe {
-        PRINT = Some(Box::new(f));
-    }
+    *PRINT.lock().unwrap() = Some(Arc::new(f));
 }
 
 /// Print the string to stdout, or if present, a user-provided print closure.
 pub fn do_println(s: &String) {
-    unsafe {
-        if let Some(p) = &PRINT {
-            p(s);
-        } else {
-            println!("{}", s);
-        }
+    let print = PRINT.lock().unwrap().clone();
+    if let Some(p) = print {
+        p(s);
+    } else {
+        println!("{}", s);
     }
 }
 
@@ -187,7 +185,7 @@ macro_rules! veprintln {
 #[macro_export]
 macro_rules! status {
     ($level:expr, $($arg:tt)*) => {
-        $crate::do_println(&format!("{}{:?} {}:{} {}", $crate::format_datetime(), $level, file!(), line!(), format!($($arg)*)));
+        $crate::do_println(&format!("{}{:?} {}:{} {}", $crate::format_datetime(), $level, file!(), line!(), format!($($arg)*)))
     };
 }
 
@@ -207,7 +205,7 @@ macro_rules! status_at_or_above {
 #[macro_export]
 macro_rules! debug {
     ($($arg:tt)*) => {
-        status_at_or_above!($crate::LogEntryLevel::DEBUG, $($arg)*);
+        status_at_or_above!($crate::LogEntryLevel::DEBUG, $($arg)*)
     };
 }
 
@@ -215,7 +213,7 @@ macro_rules! debug {
 #[macro_export]
 macro_rules! info {
     ($($arg:tt)*) => {
-        status_at_or_above!($crate::LogEntryLevel::INFO, $($arg)*);
+        status_at_or_above!($crate::LogEntryLevel::INFO, $($arg)*)
     };
 }
 
@@ -223,7 +221,7 @@ macro_rules! info {
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {
-        status_at_or_above!($crate::LogEntryLevel::WARN, $($arg)*);
+        status_at_or_above!($crate::LogEntryLevel::WARN, $($arg)*)
     };
 }
 
@@ -231,7 +229,7 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => {
-        status_at_or_above!($crate::LogEntryLevel::ERROR, $($arg)*);
+        status_at_or_above!($crate::LogEntryLevel::ERROR, $($arg)*)
     };
 }
 
@@ -310,7 +308,7 @@ pub fn format_fail(file_base_name: &str) -> String {
 }
 
 /// Directly prints a completion message, taking in the CompleteStatus enum
-pub fn print_complete(file_base_name: &String, status: CompleteStatus) {
+pub fn print_complete(file_base_name: &str, status: CompleteStatus) {
     do_println(&format_complete(file_base_name, status));
 }
 
@@ -348,5 +346,5 @@ pub fn format_complete(file_base_name: &str, status: CompleteStatus) -> String {
 /// // Experimental Code! - Results may vary, bugs will be present, and not all functionality has been implemented
 /// ```
 pub fn print_experimental() {
-    do_println(&format!("{} - Results may vary, bugs will be present, and not all functionality has been implemented", "Experimental Code!".red()));
+    do_println(&format!("{} - Results may vary, bugs will be present, and not all functionality has been implemented", "Experimental Code!".red()))
 }

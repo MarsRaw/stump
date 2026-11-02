@@ -1,18 +1,18 @@
 [package]
 name = "stump"
 version = "0.2.1"
-edition = "2021"
+edition = "2024"
 authors = ["Kevin M. Gill <apoapsys@gmail.com>"]
 description = "Simplified command line logging"
 repository = "https://github.com/kmgill/stump"
 readme = "README.md"
-license = "MIT" 
+license = "MIT"
 
 [lib]
 name = "stump"
 
 [dependencies]
 chrono = "0.4.19"
-colored = "2.0.0"
+colored = "3.1.1"
 termsize = "0.1.6"
 anyhow = "1.0.65"
